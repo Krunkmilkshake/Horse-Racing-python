@@ -4,6 +4,61 @@ import turtle
 import random
 import time
 
+def registerBetters():
+    # Creat empty list to hold name of all the betters
+    lst =[]
+    # Instructions for the user
+    print('REGISTRATION')
+    print('------------')
+    print('Enter names of individuals to register, hit Enter when done.')
+    # Prompt first name and enter into list
+    name = input('Enter name: ')
+    lst.append(name)
+    while name != '':
+        name = input('Enter next name: ')
+        lst.append(name)
+    # Return the list of better names
+    del lst[-1]
+    print(lst)
+    return lst
+
+def getAllBets(betters, no_horses):
+    name_bet_lst = []
+    for i in range(0, len(betters)):
+        print(betters[i], 'place your bet')
+        horse = int(input('Which horse? '))
+        # check to ensure users entered a valid horse number
+        while horse not in range(1, no_horses + 1):
+            horse = int(input('Invalid horse number, please reenter: '))
+        bet = int(input('How much waging? '))
+        name_bet_lst.append((horse, bet))
+    print(name_bet_lst)
+    return name_bet_lst
+
+def updateGains(winner, bets, gains):
+    # set up values
+    total_pool = 0
+    winner_bets = 0
+    for i in range(0, len(bets)):
+        total_pool += bets[i][1]
+        if bets[i][0] == winner:
+            winner_bets += bets[i][1]
+    # calculate commission(15%) and remaining pool
+    total_pool = total_pool * 0.85
+
+    # calculate payout per dollar
+    if winner_bets > 0:
+        payout_per_dollar = total_pool / winner_bets
+
+    # update gains list
+    for i in range(0, len(bets)):
+        if bets[i][0] == winner:
+            gains[i] = (payout_per_dollar * bets[i][1]) - bets[i][1]
+        else:
+            gains[i] = gains[i] - bets[i][1]
+
+    return gains
+
 def getHorseImages(num_horses):
     # init empty list
     images = []
@@ -143,48 +198,81 @@ def displayWinner(winning_horse, winner_banner):
         time.sleep(.4)
 
 # ---- main
+def main():
+    # init number of horses
+    num_horses = 10
 
-# init number of horses
-num_horses = 10
+    # Get names of betters and start gains list
+    betters = registerBetters()
+    gains = []
+    for i in range(0, len(betters)):
+        gains.append(0)
 
-# set window size
-turtle.setup(750,800)
+    # Prompt user for the number of races they want to play
+    number_of_races = int(input('Enter the number of races to run: '))
 
-# get turtle window
-window = turtle.Screen()
+    # Loop controlling the number of races
+    while number_of_races != 0:
 
-# set window title bar
-window.title('Horse Race Simulation Program')
+        print('Starting a new race ... Placing bets')
 
-# hide default turtle and keep from drawing
-turtle.hideturtle()
-turtle.penup()
+        # get all the bets for this race
+        bets = getAllBets(betters, num_horses)
 
-# init screen layout parameters
-start_loc = (240, -200)
-finish_line = -240
-track_separation = 60
-forward_incr = 6
+        # set window size
+        turtle.setup(750,800)
 
-# register images
-horse_images = getHorseImages(num_horses)
-banner_images = getBannerImages(num_horses)
-registerHorseImages(horse_images)
-registerBannerImages(banner_images)
+        # get turtle window
+        window = turtle.Screen()
 
-# generate and init horses
-horses = generateHorses(horse_images, num_horses)
+        # set window title bar
+        window.title('Horse Race Simulation Program')
 
-# place horses at starting line
-placeHorses(horses, start_loc, track_separation)
+        # hide default turtle and keep from drawing
+        turtle.hideturtle()
+        turtle.penup()
 
-# start horses
-winner = startHorses(horses, banner_images, finish_line,
-                     forward_incr)
+        # init screen layout parameters
+        start_loc = (240, -200)
+        finish_line = -240
+        track_separation = 60
+        forward_incr = 6
 
-# light up for winning horse
-displayWinner(horses[winner], banner_images[3][0])
+        # register images
+        horse_images = getHorseImages(num_horses)
+        banner_images = getBannerImages(num_horses)
+        registerHorseImages(horse_images)
+        registerBannerImages(banner_images)
 
-# terminate program when close window
-turtle.exitonclick()
-            
+        # generate and init horses
+        horses = generateHorses(horse_images, num_horses)
+
+        # place horses at starting line
+        placeHorses(horses, start_loc, track_separation)
+
+        # start horses
+        winner = startHorses(horses, banner_images, finish_line,
+                             forward_incr)
+
+        # light up for winning horse
+        displayWinner(horses[winner], banner_images[3][0])
+
+        # added 1 to winner, before it was an index value
+        print('\nHorse', winner + 1, 'is the winner!\n')
+        print('Registered Users Gains')
+        print('----------------------')
+        gains = updateGains(winner + 1, bets, gains)
+        for i in range(0, len(betters)):
+            print(betters[i], '$', float(gains[i]))
+
+
+
+        # terminate program when close window
+        turtle.exitonclick()
+
+        number_of_races -= 1
+
+    # loop is done, display that all races are over
+    print('\nAll races completed')
+
+main()
